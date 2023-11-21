@@ -1,1 +1,1 @@
-# CRC-Visualization-Tool
+# CRC Visualization Tool
