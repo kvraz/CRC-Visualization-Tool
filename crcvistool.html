@@ -6,30 +6,30 @@
     <title>CRC Visualization Tool</title>
    
 </head>
-<body>
-    <h1>CRC VISUALIZATION TOOL</h1>
-    <h2>This is a tool to visualise how Cyclic Redundancy Check algorithm for error detection works</h2>
+    <body>
+        <h1>CRC VISUALIZATION TOOL</h1>
+        <h2>This is a tool to visualise how Cyclic Redundancy Check algorithm for error detection works</h2>
 
-    <!-- Container for form and rounded border area -->
-    <div class="container">
-        <!-- Form for input elements -->
-        <form id="crc-form" action="#" method="post">
-            <div class="input-container">
-                <label for="message">Message to be transmitted:</label>
-                <input type="text" id="message" name="message" required>
-            </div>
-            <div class="input-container">
-                <label for="polynomial">Polynomial:</label>
-                <input type="text" id="polynomial" name="polynomial" required>
-            </div>
-            <input type="submit" value="Calculate" class="submit-button">
-        </form>
+        <!-- Container for inserting and displaying values -->
+        <div class="container">
+            <!-- Form to get the message and polynomial -->
+            <form id="form" action="#" method="post">
+                <div class="input-container">
+                    <label for="message">Initial Message:</label>
+                    <input type="text" id="message" name="message" placeholder="Must be in binary format" required>
+                </div>
+                <div class="input-container">
+                    <label for="polynomial">Generator Polynomial:</label>
+                    <input type="text" id="polynomial" name="polynomial" placeholder="Must be in format: x^k + x^(k-1) + ... + 1" required>
+                </div>
+                <input type="submit" value="Calculate" class="button">
+                <input type="reset" value="Clear" class="button">
+            </form>
 
-        <!-- Rounded border area -->
-        <div class="rounded-border">
-            <!-- Content inside the rounded border area -->
-            <!-- You can add any content here -->
+            <!-- Box for displaying values -->
+            <div class="values-box">
+                
+            </div>
         </div>
-    </div>
-</body>
+    </body>
 </html>
