@@ -3,9 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>CRC Visualising Tool</title>
+   
 </head>
 <body>
-    <h1>Hello world</h1>
+    <h1>CRC VISUALISING TOOL</h1>
+    <h2>This is a tool to visualise how Cyclic Redundancy Check algorithm for error detection works</h2>
+
+    <!-- Container for form and rounded border area -->
+    <div class="container">
+        <!-- Form for input elements -->
+        <form id="crc-form" action="#" method="post">
+            <div class="input-container">
+                <label for="message">Message to be transmitted:</label>
+                <input type="text" id="message" name="message" required>
+            </div>
+            <div class="input-container">
+                <label for="polynomial">Polynomial:</label>
+                <input type="text" id="polynomial" name="polynomial" required>
+            </div>
+            <input type="submit" value="Calculate" class="submit-button">
+        </form>
+
+        <!-- Rounded border area -->
+        <div class="rounded-border">
+            <!-- Content inside the rounded border area -->
+            <!-- You can add any content here -->
+        </div>
+    </div>
 </body>
 </html>
