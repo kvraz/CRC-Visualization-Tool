@@ -24,13 +24,22 @@
                         <input type="text" id="polynomial" name="polynomial" placeholder="Must be in format: x^k + x^(k-1) + ... + 1" required>
                     </div>
                     <input type="submit" value="Calculate" class="button">
-                    <input type="reset" value="Clear" class="button">
+                    <!--<input type="reset" value="Clear" class="button">
+                    <div id="errorMessage" style="color: red;"></div> -->
+                    <div id="clear-container">
+                        <input type="reset" value="Clear" class="button">
+                        <p id="errorMessage" style="color: red; display: inline-block; margin-left: 10px;"></p>
+                    </div>
                 </form>
             </div>
             <!-- Box for displaying values -->
             <div class="values-box">
-                
+                <p id="messageValue">M(x) = </p>
+                <p id="polynomialValue">G(x) = </p>
+                <p id="newValue">M(x) * x^k =</p>
             </div>
         </div>
+
+        <script src="crcvistool.js"></script>
     </body>
 </html>

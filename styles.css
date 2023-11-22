@@ -67,12 +67,19 @@ h1, h2 {
     background-color: #444;
 }
 
+#clear-container{
+    display: inline-block;
+}
+
 .values-box {
-    
+    border: 2px solid;
+    border-color:#444;
     height: 165px;
     width: 50%;
     box-sizing: border-box;
     border-radius: 15px; 
-    background-color: #444; 
+    background-color: #777; 
+    padding: 5px;
+    color: #444;
 }
  
