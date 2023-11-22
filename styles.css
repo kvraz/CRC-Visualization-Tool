@@ -82,10 +82,37 @@ h1, h2 {
     border-radius: 15px; 
     
     padding-left: 5px;
-    color: #444;
+    color: #333;
 }
 
 #note{
     font-size: small;
     font-style: italic;
+}
+
+.operations-container{
+    border: 2px solid black;
+    height: 500px;
+    width: 100%;
+    display: flex;
+    color: #333;
+}
+
+.remainder-container {
+    flex: 50%; /* Each container takes up 50% of the width */
+    height: 500px;
+    border: 2px solid red;
+}
+
+.transimt-container{
+    border: 2px solid green;
+    height: 100px;
+    flex: bottom;
+}
+
+
+.check-container {
+    flex: 50%; /* Each container takes up 50% of the width */
+    height: 500px;
+    border: 2px solid blue;
 }

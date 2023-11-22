@@ -21,7 +21,7 @@
                     </div>
                     <div class="input-field">
                         <label for="polynomial">Generator Polynomial:</label>
-                        <input type="text" id="polynomial" name="polynomial" placeholder="Must be in format: x^k + x^(k-1) + ... + 1" required>
+                        <input type="text" id="polynomial" name="polynomial" placeholder="Must be in format: x^k + x^(k-1) + ... + x^1 + 1" required>
                     </div>
                     <input type="submit" value="Calculate" class="button">
                     <!--<input type="reset" value="Clear" class="button">
@@ -36,9 +36,20 @@
             <div class="values-box">
                 <p id="messageValue">M(x) = </p>
                 <p id="polynomialValue">G(x) = </p>
-                <p id="newValue">M(x) * x^k =</p>
-                <div id = "note">Adding as many 0s at the end of the message as the polynomial degree:</div><br>
+                <p id="newValue">M(x) * x^k = </p>
+                <div id = "note">(Adding as many 0s at the end of the message as the polynomial degree)</div><br>
                 <input type="submit" value="Calculate Remainder" class="button">
+            </div>
+        </div>
+        <div class="operations-container">
+            <div class = "remainder-container" id="remainderContainer">
+                <div class = "transimt-container">
+
+                </div>
+                
+            </div>
+            <div class = "check-container"  id="checkContainer">
+
             </div>
         </div>
 
