@@ -70,13 +70,14 @@ document.getElementById('form').addEventListener('submit', function(event) {
     errorMessage.textContent = ''; // Clear previous error message if it was displayed
     messageLine.textContent = `M(x) = ${message}`;
     polynomialLine.textContent = `G(x) = ${convertToBinary(polynomial)}`;
-    newLine.textContent = `M(x) * x^${polynomialGrade} = ${newMessage}`;
+    newLine.textContent = `M(x) * x^${polynomialGrade} = ${newMessage} `;
 
 });
 
 document.getElementById('form').addEventListener('reset', function() {
     const errorMessage = document.getElementById('errorMessage');
     const polynomialLine = document.getElementById('polynomialValue');
+    const newLine = document.getElementById('newValue');
 
     errorMessage.textContent = ''; // Clear error message when the form is reset
     messageLine.textContent = '';

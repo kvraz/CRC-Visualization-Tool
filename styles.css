@@ -1,8 +1,10 @@
 body {
     background-color: #f2f2f2;
     font-family: Arial, sans-serif;
-    margin: 10;
-    padding: 0;
+    margin-left: 10px;
+    margin-right: 10px;
+    padding: 0px;
+    transform: scale(0.7);
 }
 
 h1, h2 {
@@ -21,14 +23,15 @@ h1, h2 {
 
 .input-box{
     padding-right: 20px;
-    height: 150px;
+    height: 200px;
     width: 50%;
 }
 
 .input-field{
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 21px;
+    padding-top: 10px;
     
 }
 
@@ -52,13 +55,12 @@ h1, h2 {
 
 .button {
     display: inline-block;
-    margin-top: 20px;
     margin-right: 3px;
     padding: 10px 20px;
     background-color: #777;
     color: #fff;
     border: none;
-    border-radius: 5px;
+    border-radius: 10px;
     cursor: pointer;
     transition: background-color 0.3s;
 }
@@ -74,12 +76,16 @@ h1, h2 {
 .values-box {
     border: 2px solid;
     border-color:#444;
-    height: 165px;
+    height: 200px;
     width: 50%;
-    box-sizing: border-box;
+    
     border-radius: 15px; 
-    background-color: #777; 
-    padding: 5px;
+    
+    padding-left: 5px;
     color: #444;
 }
- 
+
+#note{
+    font-size: small;
+    font-style: italic;
+}
