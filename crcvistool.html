@@ -1,31 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRC Visualization Tool</title>
-   
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>CRC Visualization Tool</title>
+        <style>
+            body {
+                background-color: #f2f2f2;
+                font-family: Arial, sans-serif;
+                margin: 10;
+                padding: 0;
+            }
+
+            h1, h2 {
+                text-align: center;
+                color: #333;
+                margin: 0px;
+                padding: 5px;
+            }
+
+            .container{
+                margin-top: 20px;
+                display: flex;
+                justify-content: flex-start;
+                align-items: flex-start;
+            }
+
+            .input-box{
+                padding-right: 20px;
+                height: 150px;
+                width: 50%;
+            }
+
+            .input-field{
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+                
+            }
+
+            .input-field label {
+                display: block;
+                font-weight: bold;
+                margin-bottom: 5px;
+                margin-right: 5px;
+                color: #333;
+            }
+
+            .input-field input[type="text"] {
+                padding: 10px;
+                width: 100%;
+                max-width: 400px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                box-sizing: border-box;
+                border-color: #444;
+            }
+
+            .button {
+                display: inline-block;
+                margin-top: 20px;
+                margin-right: 3px;
+                padding: 10px 20px;
+                background-color: #777;
+                color: #fff;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+
+            .button:hover {
+                background-color: #444;
+            }
+
+            .values-box {
+                
+                height: 165px;
+                width: 50%;
+                box-sizing: border-box;
+                border-radius: 15px; 
+                background-color: #444; 
+            }
+        </style>  
+    </head>
     <body>
         <h1>CRC VISUALIZATION TOOL</h1>
-        <h2>This is a tool to visualise how Cyclic Redundancy Check algorithm for error detection works</h2>
+        <h2>This is a tool to visualize how Cyclic Redundancy Check algorithm for error detection works</h2>
 
         <!-- Container for inserting and displaying values -->
         <div class="container">
             <!-- Form to get the message and polynomial -->
-            <form id="form" action="#" method="post">
-                <div class="input-container">
-                    <label for="message">Initial Message:</label>
-                    <input type="text" id="message" name="message" placeholder="Must be in binary format" required>
-                </div>
-                <div class="input-container">
-                    <label for="polynomial">Generator Polynomial:</label>
-                    <input type="text" id="polynomial" name="polynomial" placeholder="Must be in format: x^k + x^(k-1) + ... + 1" required>
-                </div>
-                <input type="submit" value="Calculate" class="button">
-                <input type="reset" value="Clear" class="button">
-            </form>
-
+            <div class="input-box">
+                <form id="form" action="#" method="post">
+                    <div class="input-field">
+                        <label for="message">Initial Message:</label>
+                        <input type="text" id="message" name="message" placeholder="Must be in binary format" required>
+                    </div>
+                    <div class="input-field">
+                        <label for="polynomial">Generator Polynomial:</label>
+                        <input type="text" id="polynomial" name="polynomial" placeholder="Must be in format: x^k + x^(k-1) + ... + 1" required>
+                    </div>
+                    <input type="submit" value="Calculate" class="button">
+                    <input type="reset" value="Clear" class="button">
+                </form>
+            </div>
             <!-- Box for displaying values -->
             <div class="values-box">
                 
