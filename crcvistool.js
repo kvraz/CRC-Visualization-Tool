@@ -146,4 +146,3 @@ document.querySelector('.values-box input[type="submit"]').addEventListener('cli
     
     console.log(calculateRemainder(newMessage, binaryPolynomial))
 });
-
