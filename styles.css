@@ -3,6 +3,7 @@ body {
     font-family: Arial, sans-serif;
     margin-left: 10px;
     margin-right: 10px;
+    margin-bottom: 10px;
     padding: 0px;
     transform: scale(1);
 }
@@ -90,29 +91,53 @@ h1, h2 {
     font-style: italic;
 }
 
-.operations-container{
-    border: 2px solid black;
-    height: 500px;
+.operations-container {
+   /*border: 2px solid black; */
+    height: 0px;
     width: 100%;
     display: flex;
     color: #333;
+    margin-top: 10px;
 }
 
-.remainder-container {
-    flex: 50%; /* Each container takes up 50% of the width */
-    height: 500px;
-    border: 2px solid red;
+.message-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column; /* Items will be stacked vertically */
+    display: block;
+    margin-right: 5px;
+
 }
 
-.transimt-container{
-    border: 2px solid green;
-    height: 100px;
-    flex: bottom;
+.default-values,
+.remainder,
+.transmit-container {
+    flex-direction: column;
+    display: block;
+    border: 2px solid transparent; /* Add borders as needed */
 }
 
+.default-values {
+    padding: 10px;
+    margin: 0; /* Reset margin */
+}
+
+.remainder {
+   /* border-color: green; /* Border color for remainder */
+    display: block;
+    padding: 10px;
+    margin: 0; /* Reset margin */
+}
+
+.transmit-container {
+    color: #ddd;
+    padding: 10px;
+}
 
 .check-container {
-    flex: 50%; /* Each container takes up 50% of the width */
+    flex: 1; /* Each container takes up 50% of the width */
     height: 500px;
-    border: 2px solid blue;
+   /* border: 2px solid blue; */
 }
+
+
