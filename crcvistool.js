@@ -225,18 +225,7 @@ document.getElementById('form').addEventListener('submit', function(event) {
 });
 
 document.getElementById('form').addEventListener('reset', function() {
-    const messageLine = document.getElementById('messageValue');
-    const polynomialLine = document.getElementById('polynomialValue');
-    const newLine = document.getElementById('newValue');
-    const errorMessage = document.getElementById('errorMessage');
-   
-
-    // Clear fields message when the form is reset
-    errorMessage.textContent = ''; 
-    messageLine.textContent = 'M(x) =';
-    polynomialLine.textContent = 'G(x) ='; 
-    newLine.textContent = 'M(x) * x^k = ';
-    
+    location.reload();
 });
 
 let transmitMessage; ////global value of the message to be transmitted to be check accross functions
@@ -299,8 +288,6 @@ document.querySelector('.values-box input[type="submit"]').addEventListener('cli
  
 
 });
-
-
 
 document.getElementById('check-form').addEventListener('submit', function(event) {
     event.preventDefault(); // Prevent form submission
