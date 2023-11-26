@@ -8,7 +8,7 @@ Inputs:
 
 Process:
 1. The polynomial is converted into a binary format.
-2. The original message is extened, depending on the degree of the given polynomial
+2. The original message is extened, depending on the degree of the given polynomial.
 3. Bitwise XOR is performed successively between the expanded message and the polynomial to determine the devision remainder.
 4. The remainder is added on the message to determine the final bit sequence that will be transmitted.
 
