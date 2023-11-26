@@ -39,6 +39,7 @@
                 <p id="newValue">M(x) * x^k = </p>
                 <div id = "note">(Adding as many 0s at the end of the message as the polynomial degree)</div><br>
                 <input type="submit" value="Calculate Remainder" class="button">
+                
             </div>
         </div>
         <div class="operations-container" id="operationsContainer">
@@ -47,9 +48,26 @@
                 <div id="remainderContainer" class="container remainder"></div>
                 <div class="transmit-container" id="transmitContainer"></div>
             </div>
-            <div class="check-container">
-                <div id="errorInsert" class="container default-values"></div>
+            <div class="check-container" id="checkContainer">
+                <div id="errorInsert" class="error-insert">
+                    <h2>Check Message for Errors</h2>
+                    <form id="check-form" action="#" method="post">
+                        <div class="input-field">
+                            <label for="newmessage">New Message:</label>
+                            <input type="text" id="newmessage" name="message" placeholder="Must be in binary format" required>
+                        </div>
+                        <input type="submit" value="Check" class="button">
+                        <div id="clear-container">
+                            <!-- Wrap the "Clear" button inside a <button> tag -->
+                            <button id="clearButton" class="button">Clear</button>
+                            <p id="errorMessageCheck" style="color: red; display: inline-block; margin-left: 10px;"></p>
+                        </div>
+                    </form>
+                </div>
+                <div id="checkRemainder" class="container remainder"></div>
+                <div class="transmit-container" id="resultContainer"></div>
             </div>
+            
         </div>
         
 

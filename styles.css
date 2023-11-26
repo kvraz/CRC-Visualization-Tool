@@ -82,7 +82,7 @@ h1, h2 {
     
     border-radius: 15px; 
     
-    padding-left: 5px;
+    padding: 10px;
     color: #333;
 }
 
@@ -136,8 +136,13 @@ h1, h2 {
 
 .check-container {
     flex: 1; /* Each container takes up 50% of the width */
-    height: 500px;
-   /* border: 2px solid blue; */
+    display: none;
 }
 
 
+.error-insert{
+    height: 150px;
+    border: 2px solid #333;
+    border-radius: 15px;
+    padding: 10px;
+}

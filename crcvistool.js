@@ -55,6 +55,7 @@ function bitwiseXOR(str1, str2) {
         }
     }
 
+
     return result;
 }
 
@@ -88,55 +89,56 @@ function addGapsWithGreen(temp, zerocount) {
     return result;
 }
 
-
-function calculateRemainder(message, polynomial){
-    const remainderContainer = document.getElementById('remainderContainer');
-    
-
+function calculateRemainder(message, polynomial, containerId){
+    const container = document.getElementById(containerId);
     let temp = '';
-    for(let i=0; i<polynomial.length; i++) temp += message.charAt(i);   //Assigning part of the message with length equal to the polynomial to the temp
+    for(let i=0; i<polynomial.length; i++) temp += message.charAt(i);
+    let result = bitwiseXOR(temp, polynomial);
 
-    let result = bitwiseXOR(temp, polynomial);  //Getting the result of the xor between the first part of the message and the polynomial
-    
+    if (result == '0'.repeat(result.length)){   //Exception where the result of xor is 0, meaning the calculations need to stop
+        container.innerHTML += `<br><h3>End of division:</h3>`;
+        container.innerHTML += `R(x) = ${addGaps(result)}<br><br>`;
+        return result;
+    } 
+
     let zerocount = 0;
-
     let messagePointer = polynomial.length;
-
     let index = 0;
-    while(result.charAt(index) != 1){       //Counting how many zeros there are at the beggining of the polynomial
+
+    while(result.charAt(index) != 1){
         zerocount++;
         index++;
     }
 
     let stepcount = 1;
-    remainderContainer.innerHTML += `<h3>Step ${stepcount}:</h3>`;
-    remainderContainer.innerHTML += `${ temp}<br>`;
-    remainderContainer.innerHTML += `${ polynomial}<br><hr style="width: ${polynomial.length * 15}px;  float: left;"><br>`;
-    remainderContainer.innerHTML += `${ addGapsWithRed(result, zerocount)}<br>`;
+    container.innerHTML += `<h3>Step ${stepcount}:</h3>`;
+    container.innerHTML += `${temp}<br>`;
+    container.innerHTML += `${polynomial}<br><hr style="width: ${polynomial.length * 15}px; float: left;"><br>`;
+    container.innerHTML += `${addGapsWithRed(result, zerocount)}<br>`;
 
-    let tempcounter = 0;
-   
-   
-    //while(polynomial.length + zerocount < message.length){
     while(messagePointer < message.length){
-        stepcount++;    //Calculating how many steps it takes for the algorithm to be completed
-        tempzeroc = zerocount;
+        stepcount++;
+        const tempzeroc = zerocount;
 
-        temp = result;      //Clearing the previous part of the message
-        for(let i=0; i<zerocount; i++) temp += message.charAt(messagePointer+ i); 
+        temp = result;
+        for(let i=0; i<zerocount; i++) temp += message.charAt(messagePointer+ i);
         messagePointer += zerocount;
         zerocount = 0;
 
-   
         temp = temp.replace(/^0+/, '');
         
-        if(temp.length < polynomial.length) {
-            remainderContainer.innerHTML += `<br><h3>End of devision:</h3>`;
-            remainderContainer.innerHTML += `R(x) = ${addGaps(temp)}<br><br>`;
+        if(temp.length < polynomial.length) {   //Exception where there are not as many bits left on the original message as the zeros that were removed
+            container.innerHTML += `<br><h3>End of division:</h3>`;
+            container.innerHTML += `R(x) = ${addGaps(temp)}<br><br>`;
             return temp;
         }
 
         result = bitwiseXOR(temp, polynomial);
+        if (result == '0'.repeat(result.length)){       //Exception where the result of xor is 0, meaning the calculations need to stop
+            container.innerHTML += `<br><h3>End of division:</h3>`;
+            container.innerHTML += `R(x) = ${addGaps(result)}<br><br>`;
+            return result;
+        }
 
         index = 0;
         while(result.charAt(index) != 1){       
@@ -144,14 +146,16 @@ function calculateRemainder(message, polynomial){
             index++;
         }
 
-        remainderContainer.innerHTML += `<h3>Step ${stepcount}:</h3>`;
-        remainderContainer.innerHTML += `${ addGapsWithGreen(temp, tempzeroc)}<br>`;
-        remainderContainer.innerHTML += `${ polynomial}<br><hr style="width: ${polynomial.length * 15}px;  float: left;"><br>`;
-        remainderContainer.innerHTML += `${ addGapsWithRed(result, zerocount)}<br>`;
-
-        tempcounter++;
+        container.innerHTML += `<h3>Step ${stepcount}:</h3>`;
+        container.innerHTML += `${addGapsWithGreen(temp, tempzeroc)}<br>`;
+        container.innerHTML += `${polynomial}<br><hr style="width: ${polynomial.length * 15}px; float: left;"><br>`;
+        container.innerHTML += `${addGapsWithRed(result, zerocount)}<br>`;
     }
 
+    container.innerHTML += `<br><h3>End of division:</h3>`;
+    result = result.replace(/^0+/, '');
+    container.innerHTML += `R(x) = ${addGaps(result)}<br><br>`;
+    return result;
 }
 
 function addBinaryStrings(str1, str2) {
@@ -196,6 +200,7 @@ document.getElementById('form').addEventListener('submit', function(event) {
     const polynomialLine = document.getElementById('polynomialValue');
     const newLine = document.getElementById('newValue');
     const errorMessage = document.getElementById('errorMessage');
+    
 
     if (!isBinary(message)) {
         errorMessage.textContent = 'Message not in binary format.';
@@ -224,28 +229,35 @@ document.getElementById('form').addEventListener('reset', function() {
     const polynomialLine = document.getElementById('polynomialValue');
     const newLine = document.getElementById('newValue');
     const errorMessage = document.getElementById('errorMessage');
+   
 
     // Clear fields message when the form is reset
     errorMessage.textContent = ''; 
     messageLine.textContent = 'M(x) =';
     polynomialLine.textContent = 'G(x) ='; 
     newLine.textContent = 'M(x) * x^k = ';
+    
 });
+
+let transmitMessage; ////global value of the message to be transmitted to be check accross functions
 
 document.querySelector('.values-box input[type="submit"]').addEventListener('click', function(event) {
     event.preventDefault(); // Prevent form submission for demonstration
+
     
     if (!calculationDone) {
         // Prevent "Calculate Remainder" if initial calculation hasn't been done
         return;
     }
 
+ 
     const { message, polynomial } = getValues();
     const operationsContainer = document.getElementById('operationsContainer');
     const remainderContainer = document.getElementById('remainderContainer');
     const defaultValues = document.getElementById('defaultValues');
     const messageContainer = document.getElementById('messageContainer');
     const transmitContainer = document.getElementById('transmitContainer');
+
     
 
     let binaryPolynomial = convertToBinary(polynomial)
@@ -264,8 +276,8 @@ document.querySelector('.values-box input[type="submit"]').addEventListener('cli
     defaultValues.style.borderTopLeftRadius = '15px';
     defaultValues. style.borderTopRightRadius = '15px';
     
-    let remainder = calculateRemainder(newMessage, binaryPolynomial);
-
+    let remainder = calculateRemainder(newMessage, binaryPolynomial, 'remainderContainer');
+    remainderContainer.style.border = "2px solid #333";
 
     transmitContainer.style.border = '2px solid #333';
     transmitContainer.style.backgroundColor = '#333';
@@ -273,12 +285,76 @@ document.querySelector('.values-box input[type="submit"]').addEventListener('cli
     transmitContainer. style.borderBottomRightRadius = '15px';
     transmitContainer.style.color = '#ddd';
 
+    transmitMessage = addBinaryStrings(newMessage, remainder);
     transmitContainer.innerHTML += `T(x) = M(x) * x^${polynomialDegree} + R(x) = <br>
     ${addGaps(newMessage)} + ${addGaps(remainder)} = <br><br>
-    <span style="color: limegreen">${addGaps(addBinaryStrings(newMessage, remainder))}</span><br><div id = "note">(This message will be sent from the Transmitter to the Receiver.)</div>
+    <span style="color: limegreen">${addGaps(transmitMessage)}</span><br><div id = "note">(This message will be sent from the Transmitter to the Receiver.)</div>
     `;
 
-    remainderContainer.style.border = "2px solid #333";
+    
+    const checkContainer = document.getElementById('checkContainer');
+    checkContainer.style.display = 'block';
+    /*checkContainer.style.border = '2px solid #333';
+    checkContainer.style.borderRadius = '15px'; */
+ 
+
+});
 
 
+
+document.getElementById('check-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent form submission
+
+    const errorInsert = document.getElementById('errorInsert'); //Field for the check message input form
+    const errorMessage = document.getElementById('errorMessageCheck');  //Wrong input notification field
+    const { message, polynomial } = getValues();    //Get original message and polyomial
+    let binaryPolynomial = convertToBinary(polynomial)  //Convert polynomial to binary format
+    const inputMessage = document.getElementById('newmessage').value.trim().replace(/\s/g, '');;    //Get new message to be tested
+    const resultContainer = document.getElementById('resultContainer'); //Field for the check results to be viewed
+
+
+    if (!isBinary(inputMessage)) {  //Check new message for correct syntax
+        errorMessage.textContent = 'Message not in binary format.';
+        return; 
+    }
+
+    // If the input is in binary format clear any previous error message
+    errorMessage.textContent = '';
+    errorInsert.style.borderBottomLeftRadius = '0px';
+    errorInsert.style.borderBottomRightRadius = '0px';
+
+    const checkRemainder = document.getElementById('checkRemainder');   //Field for the calculations to take place
+    checkRemainder.style.border = "2px solid #333";
+
+    let newremainder = calculateRemainder(inputMessage, binaryPolynomial, 'checkRemainder');
+    
+
+    
+    resultContainer.style.border = '2px solid #333';
+    resultContainer.style.backgroundColor = '#333';
+    resultContainer.style.borderBottomLeftRadius = '15px';
+    resultContainer. style.borderBottomRightRadius = '15px';
+    resultContainer.style.color = '#ddd';
+
+    if(newremainder == '0'.repeat(newremainder.length)) newremainder = 0; else newremainder = 1;
+
+    if((newremainder == 0) && inputMessage == transmitMessage)
+        resultContainer.innerHTML = `<p>The remainder of the devision is 0 and the checked message was equal to the message the Transmitter sent. The Generator Polynomial was <span style="color: limegreen">effective.</span></p>`;
+    else if((newremainder == 0) && inputMessage != transmitMessage)
+        resultContainer.innerHTML = `<p>The remainder of the devision is 0 but the checked message was not equal to the message the Transmitter sent. The Generator Polynomial was not <span style="color: red">effective.</span></p>`;
+    else if((newremainder != 0) && inputMessage == transmitMessage)
+        resultContainer.innerHTML = `<p>The remainder of the devision is not 0 but the checked message was equal to the message the Transmitter sent. The Generator Polynomial was not <span style="color: red">effective.</span></p>`;
+    else if((newremainder != 0) && inputMessage != transmitMessage)
+        resultContainer.innerHTML = `<p>The remainder of the devision is not 0 and the checked message was not equal to the message the Transmitter sent. The Generator Polynomial was <span style="color: limegreen">effective.</span></p>`;
+    
+
+});
+
+document.getElementById('clearButton').addEventListener('click', function(event) {
+    event.preventDefault();
+
+    document.getElementById('newmessage').value = '';
+    document.getElementById('checkRemainder').innerHTML = '';
+    document.getElementById('resultContainer').innerHTML = '';
+    document.getElementById('errorMessageCheck').textContent = '';
 });
