@@ -68,9 +68,9 @@ function addGapsWithRed(temp, zerocount) {
     for (let i = 0; i < temp.length; i++) {
         if (i < zerocount) {
             // Wrap characters before zerocount in red spans with gaps
-            result += `<span style="color: red;">${temp.charAt(i)}</span>`;
+            result += `<span style="color: red; padding: 2px;">${temp.charAt(i)}</span>`;
         } else {
-            result += `<span>${temp.charAt(i)}</span>`;
+            result += `<span style="padding: 2px;">${temp.charAt(i)}</span>`;
         }
     }
     return result;
@@ -91,72 +91,71 @@ function addGapsWithGreen(temp, zerocount) {
 
 function calculateRemainder(message, polynomial, containerId){
     const container = document.getElementById(containerId);
-    let temp = '';
+    console.log("new calculation")
+    console.log("------------------")
+
+    let result = ''
+    let temp = '';  //temp variable gets part of the message, equal with the polynomial size
     for(let i=0; i<polynomial.length; i++) temp += message.charAt(i);
-    let result = bitwiseXOR(temp, polynomial);
+    console.log("temp: "+temp)
+    
+    let messagePointer = temp.length;     //pointer to how many message bits have been used, initialized at the end of the polynomial
+    console.log("message pointer: "+ messagePointer)
 
-    if (result == '0'.repeat(result.length)){   //Exception where the result of xor is 0, meaning the calculations need to stop
-        container.innerHTML += `<br><h3>End of division:</h3>`;
-        container.innerHTML += `R(x) = ${addGaps(result)}<br><br>`;
-        return result;
-    } 
-
-    let zerocount = 0;
-    let messagePointer = polynomial.length;
-    let index = 0;
-
-    while(result.charAt(index) != 1){
-        zerocount++;
-        index++;
-    }
-
-    let stepcount = 1;
-    container.innerHTML += `<h3>Step ${stepcount}:</h3>`;
-    container.innerHTML += `${temp}<br>`;
-    container.innerHTML += `${polynomial}<br><hr style="width: ${polynomial.length * 15}px; float: left;"><br>`;
-    container.innerHTML += `${addGapsWithRed(result, zerocount)}<br>`;
-
-    while(messagePointer < message.length){
-        stepcount++;
-        const tempzeroc = zerocount;
-
-        temp = result;
-        for(let i=0; i<zerocount; i++) temp += message.charAt(messagePointer+ i);
-        messagePointer += zerocount;
-        zerocount = 0;
-
-        temp = temp.replace(/^0+/, '');
+    let stepcount = 0;
+   
+    while(messagePointer <= message.length){
+        stepcount++;    //increasing step count
+        console.log("loop: "+ stepcount)
         
-        if(temp.length < polynomial.length) {   //Exception where there are not as many bits left on the original message as the zeros that were removed
-            container.innerHTML += `<br><h3>End of division:</h3>`;
-            container.innerHTML += `R(x) = ${addGaps(temp)}<br><br>`;
-            return temp;
-        }
 
-        result = bitwiseXOR(temp, polynomial);
-        if (result == '0'.repeat(result.length)){       //Exception where the result of xor is 0, meaning the calculations need to stop
-            container.innerHTML += `<br><h3>End of division:</h3>`;
-            container.innerHTML += `R(x) = ${addGaps(result)}<br><br>`;
-            return result;
-        }
+        result = bitwiseXOR(temp, polynomial);  //getting the next xor
+        console.log("result: "+ result)
 
-        index = 0;
-        while(result.charAt(index) != 1){       
+        let index = 0;
+        let zerocount = 0;
+        while(result.charAt(index) != 1 && index<result.length){   //calculating how many creates after the next xor
             zerocount++;
             index++;
         }
 
-        container.innerHTML += `<h3>Step ${stepcount}:</h3>`;
-        container.innerHTML += `${addGapsWithGreen(temp, tempzeroc)}<br>`;
-        container.innerHTML += `${polynomial}<br><hr style="width: ${polynomial.length * 15}px; float: left;"><br>`;
-        container.innerHTML += `${addGapsWithRed(result, zerocount)}<br>`;
-    }
+    
 
+        console.log("zerocount: "+ zerocount)
+
+        // if (zerocount == 0) zerocount = result.length;
+        
+        //Printing Data
+        container.innerHTML += `<h3>Step ${stepcount}:</h3>`;
+        container.innerHTML += `${addGaps(temp)}<br>`;
+        //container.innerHTML += `${addGapsWithGreen(temp, tempzeroc)}<br>`;
+        container.innerHTML += `${addGaps(polynomial)}<br><hr style="width: ${polynomial.length * 15}px; float: left;"><br>`;
+        container.innerHTML += `${addGapsWithRed(result, zerocount)}<br>`;
+        //container.innerHTML += `${addGaps(result)}<br>`;
+
+        
+        
+        
+        
+
+        //copying the result into the next temp and replacing the zeros with the next #zero message bits
+        temp = result;  
+        temp = temp.replace(/^0+/, '');
+        for(let i=0; i<zerocount; i++) temp += message.charAt(messagePointer+ i);
+        console.log("temp: "+temp)
+
+        messagePointer += zerocount;    //increasing the message pointer by #zero bits
+        zerocount = 0;   //reinitializing the zero bit counter  
+        console.log("message pointer: "+ messagePointer)
+    } 
+    
+    console.log("out of the loop")
+    if(temp == "") temp = '0';
     container.innerHTML += `<br><h3>End of division:</h3>`;
-    result = result.replace(/^0+/, '');
-    container.innerHTML += `R(x) = ${addGaps(result)}<br><br>`;
+    container.innerHTML += `R(x) = ${addGaps(temp)}<br><br>`;
     return result;
 }
+
 
 function addBinaryStrings(str1, str2) {
     let carry = 0;
