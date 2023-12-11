@@ -150,10 +150,11 @@ function calculateRemainder(message, polynomial, containerId){
     } 
     
     console.log("out of the loop")
+    console.log("temp")
     if(temp == "") temp = '0';
     container.innerHTML += `<br><h3>End of division:</h3>`;
     container.innerHTML += `R(x) = ${addGaps(temp)}<br><br>`;
-    return result;
+    return temp;
 }
 
 
