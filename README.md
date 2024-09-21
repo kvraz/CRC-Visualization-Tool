@@ -1,21 +1,35 @@
 # CRC Visualization Tool
 
-This is a Calculator Tool to visualize how the CRC (Cyclic Redundancy Check) works.
+The **CRC Visualization Tool** is designed to help you understand and visualize how the Cyclic Redundancy Check (CRC) works.
 
-Inputs:
-- The message the user want to transmit.
-- A generator polynomial that will be used to devide the message
+## Features
 
-Process:
-1. The polynomial is converted into a binary format.
-2. The original message is extened, depending on the degree of the given polynomial.
-3. Bitwise XOR is performed successively between the expanded message and the polynomial to determine the devision remainder.
-4. The remainder is added on the message to determine the final bit sequence that will be transmitted.
+- **Input Requirements**:
+  - A message that you want to transmit.
+  - A generator polynomial used for dividing the message.
 
-Additional Feature:
-Given the generator polynomial and the calculated message, the user can test messages of his own to see if the generator will detect the altered bits. The process is similar to the main calculation.
-If the generator the user picked is effective, the remainder of the corrupted message from its devision with the polynomial will not be zero. If for some reason it is, that means that the polynomial did not manage to detect the altered bits. Vice versa, it is possible for the remainder to have zero value, but for the two messages being compared to be different. This is another indication that the specific generator polynomial is not suitable for that message.
+## How It Works
 
-In both message calculation and message check case every XOR phase is displayed with red colors for the bits that are from the remainder and green color for the bits that are added to the remainder from the original message.
+1. **Binary Conversion**: The generator polynomial is converted into a binary format.
+2. **Message Extension**: The original message is extended based on the degree of the polynomial.
+3. **Bitwise XOR Operation**: Successive bitwise XOR operations are performed between the expanded message and the polynomial to determine the division remainder.
+4. **Final Bit Sequence**: The remainder is appended to the original message to create the final bit sequence that will be transmitted.
 
-Given the algorithm and the HTML and CCS properties are in a very initial stage, there might be bugs in the calculator.
+## Additional Feature
+
+Once you have the generator polynomial and the calculated message, you can test custom messages to see if the generator detects any altered bits. This process mirrors the main calculation:
+
+- If the polynomial effectively detects errors, the remainder from dividing the corrupted message by the polynomial will not be zero.
+- Conversely, a zero remainder indicates that the polynomial failed to detect the altered bits, which is a concern. It's also important to note that a zero remainder does not guarantee that the two messages are identical.
+
+### Visual Feedback
+
+During both the message calculation and testing phases, each XOR operation is visually represented:
+- **Red** for bits from the remainder.
+- **Green** for bits from the original message added to the remainder.
+
+## Note
+
+As this tool is in its initial stages of development, you may encounter bugs. Your feedback and contributions are welcome!
+
+Feel free to explore and learn more about CRC through this interactive tool!
