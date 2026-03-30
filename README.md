@@ -144,13 +144,6 @@ Important note:
 - A zero remainder does **not** guarantee that no error occurred.
 - It only means the chosen generator did not detect that particular error pattern.
 
-## Suggested next improvements
-
-- add support for manual bit flipping at a chosen index
-- add optional textual explanations beside each division step
-- add small preset descriptions for common CRC polynomials
-- add unit tests for generator parsing and division traces
-
 ## License
 
-No license file is included in this repository at the moment. Add one if you plan to distribute or reuse it broadly.
+No license file is included in this repository at the moment.
