@@ -1,35 +1,156 @@
 # CRC Visualization Tool
 
-The **CRC Visualization Tool** is designed to help you understand and visualize how the Cyclic Redundancy Check (CRC) works.
+An interactive, static web app for learning how **Cyclic Redundancy Check (CRC)** works from both sides of the transmission flow:
 
-## Features
+- the **transmitter**, which appends the CRC remainder to the original message
+- the **receiver**, which divides the received frame and checks whether the remainder is zero
 
-- **Input Requirements**:
-  - A message that you want to transmit.
-  - A generator polynomial used for dividing the message.
+The project stays intentionally lightweight: plain HTML, CSS, and JavaScript, with no build step and no external dependencies.
 
-## How It Works
+## What the app does
 
-1. **Binary Conversion**: The generator polynomial is converted into a binary format.
-2. **Message Extension**: The original message is extended based on the degree of the polynomial.
-3. **Bitwise XOR Operation**: Successive bitwise XOR operations are performed between the expanded message and the polynomial to determine the division remainder.
-4. **Final Bit Sequence**: The remainder is appended to the original message to create the final bit sequence that will be transmitted.
+The tool helps you inspect the full CRC workflow:
 
-## Additional Feature
+1. Enter an initial binary message.
+2. Enter a generator in either:
+   - polynomial form, such as `x^4 + x + 1`
+   - binary form, such as `10011`
+3. Generate the padded message `M(x) * x^k`.
+4. Visualize the CRC long division step by step.
+5. See the final remainder and transmitted codeword.
+6. Test a received frame at the receiver and observe whether the generator detects the change.
 
-Once you have the generator polynomial and the calculated message, you can test custom messages to see if the generator detects any altered bits. This process mirrors the main calculation:
+## Why this version is better
 
-- If the polynomial effectively detects errors, the remainder from dividing the corrupted message by the polynomial will not be zero.
-- Conversely, a zero remainder indicates that the polynomial failed to detect the altered bits, which is a concern. It's also important to note that a zero remainder does not guarantee that the two messages are identical.
+This refactor keeps the original educational idea intact, but improves the repo in several important ways:
 
-### Visual Feedback
+- clearer transmitter-to-receiver workflow
+- more consistent and polished UI
+- responsive layout for desktop and mobile
+- support for both polynomial input and binary generator input
+- stronger validation and clearer error states
+- modular JavaScript with separated parsing, CRC logic, rendering, and UI state
+- richer visualization of each division step
+- built-in receiver helpers such as:
+  - reuse transmitted codeword
+  - inject a one-bit error
+  - instantly compare receiver output to the original transmission
 
-During both the message calculation and testing phases, each XOR operation is visually represented:
-- **Red** for bits from the remainder.
-- **Green** for bits from the original message added to the remainder.
+## Running the project
 
-## Note
+Because the project is fully static, you can run it by simply opening:
 
-As this tool is in its initial stages of development, you may encounter bugs. Your feedback and contributions are welcome!
+- `crcvistool.html`
 
-Feel free to explore and learn more about CRC through this interactive tool!
+If you prefer, you can also serve the folder with any lightweight local server, but it is not required.
+
+## Inputs and assumptions
+
+### Initial message
+
+- Must be binary.
+- Spaces are allowed and will be ignored.
+
+### Generator
+
+Accepted formats:
+
+- Polynomial notation: `x^4 + x + 1`
+- Binary notation: `10011`
+
+Generator rules:
+
+- the highest-order term must exist
+- the constant term `1` must exist
+- for binary input, the first and last bit must be `1`
+
+## Interface overview
+
+### 1. Transmitter panel
+
+The main form where the user enters:
+
+- the original binary message
+- the generator polynomial or generator bits
+
+It also includes example presets for quick demos.
+
+### 2. Encoding summary
+
+After a valid run, the app shows:
+
+- generator degree
+- message length
+- codeword length
+- normalized generator polynomial
+- generator bits
+- original message
+- padded message
+- CRC remainder
+- transmitted codeword
+
+### 3. Division walkthrough
+
+The app renders each generator alignment across the working register. For every step it shows:
+
+- the current working state
+- the aligned generator
+- the register state after XOR, or after a shift-only step
+
+This makes it easier to understand why CRC division moves the way it does.
+
+### 4. Receiver validation
+
+The receiver panel lets the user:
+
+- check the transmitted codeword directly
+- inject a one-bit error
+- paste a custom received frame
+
+The app then explains whether:
+
+- the remainder is zero
+- the received frame matches the transmitted codeword
+- the error was detected or went undetected
+
+## Project structure
+
+- `crcvistool.html`
+  Main application markup and workflow layout.
+
+- `styles.css`
+  Visual system, layout, step visualization styles, responsive rules, and motion.
+
+- `crcvistool.js`
+  CRC parsing, long-division logic, receiver checks, rendering, presets, and state handling.
+
+- `PROJECT_OVERVIEW.md`
+  A higher-level explanation of the app architecture and design choices.
+
+## CRC logic used in the app
+
+At a high level:
+
+1. Convert the generator into binary coefficients.
+2. Append `k` zeros to the message, where `k` is the generator degree.
+3. Run polynomial long division in GF(2).
+4. Take the final remainder.
+5. Append the remainder to the original message to build the transmitted codeword.
+6. At the receiver, divide the received frame by the same generator.
+7. If the remainder is zero, the frame passes the CRC check.
+
+Important note:
+
+- A zero remainder does **not** guarantee that no error occurred.
+- It only means the chosen generator did not detect that particular error pattern.
+
+## Suggested next improvements
+
+- add support for manual bit flipping at a chosen index
+- add optional textual explanations beside each division step
+- add small preset descriptions for common CRC polynomials
+- add unit tests for generator parsing and division traces
+
+## License
+
+No license file is included in this repository at the moment. Add one if you plan to distribute or reuse it broadly.

@@ -1,347 +1,609 @@
-function getValues() {
-    const messageValue = document.getElementById('message').value.trim().replace(/\s/g, '');;
-    const polynomialValue = document.getElementById('polynomial').value.trim();
+const refs = {
+    crcForm: document.getElementById("crcForm"),
+    messageInput: document.getElementById("messageInput"),
+    generatorInput: document.getElementById("generatorInput"),
+    formMessage: document.getElementById("formMessage"),
+    summaryContainer: document.getElementById("summaryContainer"),
+    divisionSection: document.getElementById("divisionSection"),
+    divisionBand: document.getElementById("divisionBand"),
+    divisionSteps: document.getElementById("divisionSteps"),
+    receiverSection: document.getElementById("receiverSection"),
+    receiverForm: document.getElementById("receiverForm"),
+    receiverInput: document.getElementById("receiverInput"),
+    receiverMessage: document.getElementById("receiverMessage"),
+    receiverSummary: document.getElementById("receiverSummary"),
+    receiverSteps: document.getElementById("receiverSteps"),
+    useCodewordButton: document.getElementById("useCodewordButton"),
+    flipBitButton: document.getElementById("flipBitButton"),
+    clearReceiverButton: document.getElementById("clearReceiverButton"),
+    presetButtons: Array.from(document.querySelectorAll(".preset-button")),
+};
+
+const state = {
+    encoded: null,
+    receiverResult: null,
+};
+
+function setFormMessage(element, message, tone = "neutral") {
+    element.textContent = message;
+    element.classList.remove("is-error", "is-success");
+
+    if (tone === "error") {
+        element.classList.add("is-error");
+    } else if (tone === "success") {
+        element.classList.add("is-success");
+    }
+}
+
+function normalizeBinaryInput(value) {
+    return value.replace(/\s+/g, "");
+}
+
+function isBinaryString(value) {
+    return /^[01]+$/.test(value);
+}
+
+function escapeHtml(value) {
+    return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function exponentToTerm(exponent) {
+    if (exponent === 0) {
+        return "1";
+    }
+
+    if (exponent === 1) {
+        return "x";
+    }
+
+    return `x^${exponent}`;
+}
+
+function binaryToPolynomial(binary) {
+    const terms = [];
+
+    for (let index = 0; index < binary.length; index += 1) {
+        if (binary[index] === "1") {
+            const exponent = binary.length - index - 1;
+            terms.push(exponentToTerm(exponent));
+        }
+    }
+
+    return terms.join(" + ");
+}
+
+function parseGenerator(input) {
+    const sanitized = input.toLowerCase().replace(/\s+/g, "");
+
+    if (!sanitized) {
+        throw new Error("Enter a generator polynomial or binary generator.");
+    }
+
+    if (/^[01]+$/.test(sanitized)) {
+        if (sanitized.length < 2) {
+            throw new Error("The binary generator must contain at least 2 bits.");
+        }
+
+        if (sanitized[0] !== "1" || sanitized[sanitized.length - 1] !== "1") {
+            throw new Error("A CRC generator must start and end with 1.");
+        }
+
+        return {
+            binary: sanitized,
+            degree: sanitized.length - 1,
+            displayLabel: sanitized,
+            polynomialLabel: binaryToPolynomial(sanitized),
+        };
+    }
+
+    const tokens = sanitized.split("+");
+
+    if (!tokens.length || tokens.some((token) => token === "")) {
+        throw new Error("Use a valid polynomial such as x^4 + x + 1.");
+    }
+
+    const exponents = new Set();
+
+    tokens.forEach((token) => {
+        if (token === "1") {
+            exponents.add(0);
+            return;
+        }
+
+        if (token === "x") {
+            exponents.add(1);
+            return;
+        }
+
+        if (/^x\^\d+$/.test(token)) {
+            exponents.add(Number(token.slice(2)));
+            return;
+        }
+
+        throw new Error("Use a polynomial like x^4 + x + 1.");
+    });
+
+    const maxExponent = Math.max(...exponents);
+
+    if (maxExponent < 1) {
+        throw new Error("The generator degree must be at least 1.");
+    }
+
+    if (!exponents.has(0)) {
+        throw new Error("The generator must include the constant term 1.");
+    }
+
+    const sortedExponents = [...exponents].sort((left, right) => right - left);
+    let binary = "";
+
+    for (let exponent = maxExponent; exponent >= 0; exponent -= 1) {
+        binary += exponents.has(exponent) ? "1" : "0";
+    }
 
     return {
-        message: messageValue,
-        polynomial: polynomialValue
+        binary,
+        degree: maxExponent,
+        displayLabel: sortedExponents.map(exponentToTerm).join(" + "),
+        polynomialLabel: sortedExponents.map(exponentToTerm).join(" + "),
     };
 }
 
-function isBinary(message) {
-    return /^[01\s]+$/.test(message.replace(/\s/g, '')); // Ignore spaces in the test
-}
+function computeDivisionTrace(messageBits, generatorBits) {
+    const working = messageBits.split("");
+    const steps = [];
+    const generatorLength = generatorBits.length;
 
-function isValidPolynomial(polynomial) {
-    return /^x\s*\^\s*\d+(\s*\+\s*x\s*\^\s*\d+)*(\s*\+\s*1)?$/i.test(polynomial.replace(/\s/g, ''));
-}
+    for (
+        let position = 0;
+        position <= working.length - generatorLength;
+        position += 1
+    ) {
+        const beforeState = working.join("");
+        const active = beforeState[position] === "1";
 
-function convertToBinary(polynomial) {
-    const regex = /x\^(\d+)/gi; // Regex to extract exponents of x
-    const matches = [];
-    let match;
-
-    while ((match = regex.exec(polynomial)) !== null) {
-        matches.push(parseInt(match[1])); // Extract and store the exponents as integers
-    }
-
-    if (matches.length === 0) {
-        return '0'; // If no x^k terms, return '0'
-    }
-
-    const maxExponent = Math.max(...matches); // Find the maximum exponent
-
-    let binaryPolynomial = '';
-    for (let i = maxExponent; i > 0; i--) {
-        binaryPolynomial += matches.includes(i) ? '1' : '0'; // Check if the exponent exists in matches array
-    }
-
-    let lastLetter = polynomial.charAt(polynomial.length-1);
-    if (lastLetter == 1 && polynomial.charAt(polynomial.length-2) != '^') binaryPolynomial += '1';
-    else binaryPolynomial += '0';
-
-    return binaryPolynomial;
-}
-
-function bitwiseXOR(str1, str2) {
-    const minLength = Math.min(str1.length, str2.length);
-    let result = '';
-    
-    for (let i = 0; i < minLength; i++) {
-        if (str1.charAt(i) !== str2.charAt(i)) {
-            result += '1';
-        } else {
-            result += '0';
-        }
-    }
-
-
-    return result;
-}
-
-function addGaps(str) {
-    return str.split('').join(' ');
-}
-
-function addGapsWithRed(temp, zerocount) {
-    let result = '';
-    for (let i = 0; i < temp.length; i++) {
-        if (i < zerocount) {
-            // Wrap characters before zerocount in red spans with gaps
-            result += `<span style="color: red; padding: 2px;">${temp.charAt(i)}</span>`;
-        } else {
-            result += `<span style="padding: 2px;">${temp.charAt(i)}</span>`;
-        }
-    }
-    return result;
-}
-
-function addGapsWithGreen(temp, zerocount) {
-    let result = '';
-    for (let i = 0; i < temp.length; i++) {
-        if (i >= temp.length - zerocount) {
-            // Wrap last zerocount characters in lime green spans with gaps
-            result += `<span style="color: limegreen;">${temp.charAt(i)}</span>`;
-        } else {
-            result += `<span>${temp.charAt(i)}</span>`;
-        }
-    }
-    return result;
-}
-
-function calculateRemainder(message, polynomial, containerId){
-    const container = document.getElementById(containerId);
-    console.log("new calculation")
-    console.log("------------------")
-
-    let result = ''
-    let temp = '';  //temp variable gets part of the message, equal with the polynomial size
-    for(let i=0; i<polynomial.length; i++) temp += message.charAt(i);
-    console.log("temp: "+temp)
-    
-    let messagePointer = temp.length;     //pointer to how many message bits have been used, initialized at the end of the polynomial
-    console.log("message pointer: "+ messagePointer)
-
-    let stepcount = 0;
-   
-    while(messagePointer <= message.length){
-        stepcount++;    //increasing step count
-        console.log("loop: "+ stepcount)
-        
-
-        result = bitwiseXOR(temp, polynomial);  //getting the next xor
-        console.log("result: "+ result)
-
-        let index = 0;
-        let zerocount = 0;
-        while(result.charAt(index) != 1 && index<result.length){   //calculating how many creates after the next xor
-            zerocount++;
-            index++;
+        if (active) {
+            for (let offset = 0; offset < generatorLength; offset += 1) {
+                working[position + offset] =
+                    working[position + offset] === generatorBits[offset] ? "0" : "1";
+            }
         }
 
-    
+        steps.push({
+            position,
+            beforeState,
+            afterState: working.join(""),
+            active,
+        });
+    }
 
-        console.log("zerocount: "+ zerocount)
+    const degree = generatorBits.length - 1;
 
-        // if (zerocount == 0) zerocount = result.length;
-        
-        //Printing Data
-        container.innerHTML += `<h3>Step ${stepcount}:</h3>`;
-        container.innerHTML += `${addGaps(temp)}<br>`;
-        //container.innerHTML += `${addGapsWithGreen(temp, tempzeroc)}<br>`;
-        container.innerHTML += `${addGaps(polynomial)}<br><hr style="width: ${polynomial.length * 15}px; float: left;"><br>`;
-        container.innerHTML += `${addGapsWithRed(result, zerocount)}<br>`;
-        //container.innerHTML += `${addGaps(result)}<br>`;
-
-        
-        
-        
-        
-
-        //copying the result into the next temp and replacing the zeros with the next #zero message bits
-        temp = result;  
-        temp = temp.replace(/^0+/, '');
-        for(let i=0; i<zerocount; i++) temp += message.charAt(messagePointer+ i);
-        console.log("temp: "+temp)
-
-        messagePointer += zerocount;    //increasing the message pointer by #zero bits
-        zerocount = 0;   //reinitializing the zero bit counter  
-        console.log("message pointer: "+ messagePointer)
-    } 
-    
-    console.log("out of the loop")
-    console.log("temp")
-    if(temp == "") temp = '0';
-    container.innerHTML += `<br><h3>End of division:</h3>`;
-    container.innerHTML += `R(x) = ${addGaps(temp)}<br><br>`;
-    return temp;
+    return {
+        steps,
+        remainder: working.slice(-degree).join(""),
+    };
 }
 
+function encodeMessage(messageBits, generator) {
+    const paddedMessage = `${messageBits}${"0".repeat(generator.degree)}`;
+    const division = computeDivisionTrace(paddedMessage, generator.binary);
+    const remainder = division.remainder.padStart(generator.degree, "0");
 
-function addBinaryStrings(str1, str2) {
-    let carry = 0;
-    let result = '';
-
-    // Ensure both strings have the same length by padding with leading zeros
-    const maxLength = Math.max(str1.length, str2.length);
-    const paddedStr1 = str1.padStart(maxLength, '0');
-    const paddedStr2 = str2.padStart(maxLength, '0');
-
-    // Iterate through the strings from right to left (LSB to MSB)
-    for (let i = maxLength - 1; i >= 0; i--) {
-        const bit1 = parseInt(paddedStr1[i]);
-        const bit2 = parseInt(paddedStr2[i]);
-
-        // Calculate the sum of bits and carry
-        const sum = bit1 + bit2 + carry;
-
-        // Determine the current bit in the result
-        result = (sum % 2) + result;
-
-        // Update the carry for the next iteration
-        carry = Math.floor(sum / 2);
-    }
-
-    // Add the final carry if it exists
-    if (carry > 0) {
-        result = carry + result;
-    }
-
-    return result;
+    return {
+        messageBits,
+        generator,
+        paddedMessage,
+        remainder,
+        codeword: `${messageBits}${remainder}`,
+        division,
+    };
 }
 
-let calculationDone = false; // Flag to track if initial calculation has been done
+function evaluateReceivedMessage(receivedBits, encoded) {
+    const division = computeDivisionTrace(receivedBits, encoded.generator.binary);
+    const remainder = division.remainder.padStart(encoded.generator.degree, "0");
+    const remainderIsZero = /^0+$/.test(remainder);
+    const matchesCodeword = receivedBits === encoded.codeword;
 
-document.getElementById('form').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent form submission for demonstration
+    let tone = "neutral";
+    let title = "Receiver analysis complete";
+    let detail =
+        "The receiver finished the division and compared the frame against the transmitted codeword.";
 
-    const { message, polynomial } = getValues();
-    const messageLine = document.getElementById('messageValue');
-    const polynomialLine = document.getElementById('polynomialValue');
-    const newLine = document.getElementById('newValue');
-    const errorMessage = document.getElementById('errorMessage');
-    
-
-    if (!isBinary(message)) {
-        errorMessage.textContent = 'Message not in binary format.';
-        return; // Stop further execution
+    if (remainderIsZero && matchesCodeword) {
+        tone = "success";
+        title = "No transmission error detected";
+        detail =
+            "The remainder is zero and the received frame matches the transmitted codeword, so the receiver accepts the message.";
+    } else if (remainderIsZero && !matchesCodeword) {
+        tone = "warning";
+        title = "Undetected error pattern";
+        detail =
+            "The remainder is zero even though the received frame differs from the transmitted codeword. This is an error pattern that this generator does not catch.";
+    } else if (!remainderIsZero && !matchesCodeword) {
+        tone = "danger";
+        title = "Transmission error detected";
+        detail =
+            "A non-zero remainder shows that the altered frame is inconsistent with the generator, so the receiver flags corruption.";
+    } else if (!remainderIsZero && matchesCodeword) {
+        tone = "danger";
+        title = "Unexpected CRC mismatch";
+        detail =
+            "The frame matches the transmitted codeword but produced a non-zero remainder. This indicates an inconsistent state and should not occur for a valid codeword.";
     }
 
-    if (!isValidPolynomial(polynomial)) {
-        errorMessage.textContent = 'Generator not in polynomial format.';
-        return; // Stop further execution
-    }
+    return {
+        receivedBits,
+        remainder,
+        remainderIsZero,
+        matchesCodeword,
+        tone,
+        title,
+        detail,
+        division,
+    };
+}
 
-    let polynomialGrade = convertToBinary(polynomial).length - 1;
-    let newMessage = message;
-    for(let i = 0; i<convertToBinary(polynomial).length-1; i++) newMessage += '0';
+function renderBitLine(bits, emphasisClass = "") {
+    const bitClass = emphasisClass ? `bit-cell ${emphasisClass}` : "bit-cell";
 
-    errorMessage.textContent = ''; // Clear previous error message if it was displayed
-    messageLine.textContent = `M(x) = ${addGaps(message)}`;
-    polynomialLine.textContent = `G(x) = ${addGaps(convertToBinary(polynomial))}`;
-    newLine.textContent = `M(x) * x^${polynomialGrade} = ${addGaps(newMessage)} `;
+    return `
+        <div class="bitline">
+            ${bits
+                .split("")
+                .map((bit) => `<span class="${bitClass}">${escapeHtml(bit)}</span>`)
+                .join("")}
+        </div>
+    `;
+}
 
-    calculationDone = true; // Set the flag to indicate initial calculation done
-});
+function renderStateTrack(bits, start, length, highlightClass) {
+    return `
+        <div class="bit-track">
+            ${bits
+                .split("")
+                .map((bit, index) => {
+                    const cellClass =
+                        index >= start && index < start + length
+                            ? `bit-cell ${highlightClass}`
+                            : "bit-cell";
 
-document.getElementById('form').addEventListener('reset', function() {
-    location.reload();
-});
+                    return `<span class="${cellClass}">${escapeHtml(bit)}</span>`;
+                })
+                .join("")}
+        </div>
+    `;
+}
 
-let transmitMessage; ////global value of the message to be transmitted to be check accross functions
+function renderGeneratorTrack(generatorBits, position, totalLength, isActive) {
+    const generatorClass = isActive ? "generator" : "generator-muted";
 
-document.querySelector('.values-box input[type="submit"]').addEventListener('click', function(event) {
-    event.preventDefault(); // Prevent form submission for demonstration
+    return `
+        <div class="bit-track">
+            ${Array.from({ length: totalLength }, (_, index) => {
+                if (index < position || index >= position + generatorBits.length) {
+                    return '<span class="bit-cell spacer">.</span>';
+                }
 
-    
-    if (!calculationDone) {
-        // Prevent "Calculate Remainder" if initial calculation hasn't been done
+                return `<span class="bit-cell ${generatorClass}">${
+                    generatorBits[index - position]
+                }</span>`;
+            }).join("")}
+        </div>
+    `;
+}
+
+function renderSummary(encoded) {
+    refs.summaryContainer.className = "summary-shell";
+    refs.summaryContainer.innerHTML = `
+        <div class="metric-bar">
+            <div class="metric">
+                <span>Generator degree</span>
+                <strong>${encoded.generator.degree}</strong>
+            </div>
+            <div class="metric">
+                <span>Message length</span>
+                <strong>${encoded.messageBits.length} bits</strong>
+            </div>
+            <div class="metric">
+                <span>Codeword length</span>
+                <strong>${encoded.codeword.length} bits</strong>
+            </div>
+        </div>
+
+        <div class="detail-list">
+            <div class="detail-item">
+                <span>Generator polynomial</span>
+                <code>${escapeHtml(encoded.generator.polynomialLabel)}</code>
+            </div>
+            <div class="detail-item">
+                <span>Generator bits</span>
+                ${renderBitLine(encoded.generator.binary)}
+            </div>
+            <div class="detail-item">
+                <span>Initial message</span>
+                ${renderBitLine(encoded.messageBits)}
+            </div>
+            <div class="detail-item">
+                <span>Padded message M(x) · x^k</span>
+                ${renderBitLine(encoded.paddedMessage)}
+            </div>
+            <div class="detail-item">
+                <span>CRC remainder</span>
+                ${renderBitLine(encoded.remainder, "remainder")}
+            </div>
+            <div class="detail-item">
+                <span>Transmitted codeword</span>
+                ${renderBitLine(encoded.codeword, "codeword")}
+            </div>
+        </div>
+    `;
+}
+
+function renderDivisionBand(encoded) {
+    refs.divisionBand.innerHTML = `
+        <div class="band-item">
+            <span>Generator</span>
+            ${renderBitLine(encoded.generator.binary)}
+        </div>
+        <div class="band-item">
+            <span>Remainder</span>
+            ${renderBitLine(encoded.remainder, "remainder")}
+        </div>
+        <div class="band-item">
+            <span>Codeword</span>
+            ${renderBitLine(encoded.codeword)}
+        </div>
+    `;
+}
+
+function renderDivisionSteps(container, steps, generatorBits) {
+    container.innerHTML = steps
+        .map((step, index) => {
+            const stepTypeLabel = step.active ? "XOR applied" : "Shift only";
+            const stepNote = step.active
+                ? "The aligned window starts with 1, so the generator is XORed with the working register."
+                : "The aligned window starts with 0, so the generator slides to the next position without changing the register.";
+
+            return `
+                <article class="division-step ${step.active ? "is-active" : "is-passive"}">
+                    <div class="step-top">
+                        <div>
+                            <p class="step-index">Step ${index + 1}</p>
+                            <h3>Align generator at bit ${step.position + 1}</h3>
+                        </div>
+                        <span class="step-tag">${stepTypeLabel}</span>
+                    </div>
+
+                    <div class="bit-rows">
+                        <div class="bit-row">
+                            <span class="row-label">Working</span>
+                            ${renderStateTrack(
+                                step.beforeState,
+                                step.position,
+                                generatorBits.length,
+                                "range"
+                            )}
+                        </div>
+
+                        <div class="bit-row">
+                            <span class="row-label">Generator</span>
+                            ${renderGeneratorTrack(
+                                generatorBits,
+                                step.position,
+                                step.beforeState.length,
+                                step.active
+                            )}
+                        </div>
+
+                        <div class="bit-row">
+                            <span class="row-label">After</span>
+                            ${renderStateTrack(
+                                step.afterState,
+                                step.position,
+                                generatorBits.length,
+                                step.active ? "after" : "range"
+                            )}
+                        </div>
+                    </div>
+
+                    <p class="step-note">${stepNote}</p>
+                </article>
+            `;
+        })
+        .join("");
+}
+
+function renderReceiverSummary(result, note = "") {
+    refs.receiverSummary.className = `panel verdict-panel verdict-${result.tone}`;
+    refs.receiverSummary.innerHTML = `
+        <p class="verdict-kicker">Receiver verdict</p>
+        <h3>${escapeHtml(result.title)}</h3>
+        <p>${escapeHtml(result.detail)}</p>
+        ${note ? `<p class="step-note">${escapeHtml(note)}</p>` : ""}
+        <div class="verdict-facts">
+            <div class="verdict-fact">
+                <span>Received frame</span>
+                <strong>${result.receivedBits.length} bits</strong>
+            </div>
+            <div class="verdict-fact">
+                <span>Remainder</span>
+                <strong>${escapeHtml(result.remainder)}</strong>
+            </div>
+            <div class="verdict-fact">
+                <span>Matches transmitted codeword</span>
+                <strong>${result.matchesCodeword ? "Yes" : "No"}</strong>
+            </div>
+        </div>
+    `;
+}
+
+function resetReceiverView() {
+    refs.receiverInput.value = "";
+    refs.receiverSteps.innerHTML = "";
+    refs.receiverSummary.className = "panel verdict-panel verdict-neutral";
+    refs.receiverSummary.innerHTML = `
+        <p class="verdict-kicker">Receiver verdict</p>
+        <h3>Waiting for a candidate message</h3>
+        <p>
+            Once you run a receiver check, the remainder analysis and detection result
+            will appear here.
+        </p>
+    `;
+    setFormMessage(refs.receiverMessage, "");
+    state.receiverResult = null;
+}
+
+function resetWorkspace() {
+    state.encoded = null;
+    resetReceiverView();
+
+    refs.summaryContainer.className = "empty-state";
+    refs.summaryContainer.innerHTML =
+        "Run a calculation to see the generator bits, padded message, remainder, and final transmitted codeword.";
+    refs.divisionBand.innerHTML = "";
+    refs.divisionSteps.innerHTML = "";
+    refs.divisionSection.classList.add("is-hidden");
+    refs.receiverSection.classList.add("is-hidden");
+    setFormMessage(refs.formMessage, "");
+}
+
+function runReceiverCheck(customBits = null, note = "") {
+    if (!state.encoded) {
+        setFormMessage(refs.receiverMessage, "Run the transmitter workflow first.", "error");
         return;
     }
 
- 
-    const { message, polynomial } = getValues();
-    const operationsContainer = document.getElementById('operationsContainer');
-    const remainderContainer = document.getElementById('remainderContainer');
-    const defaultValues = document.getElementById('defaultValues');
-    const messageContainer = document.getElementById('messageContainer');
-    const transmitContainer = document.getElementById('transmitContainer');
+    const receivedBits = normalizeBinaryInput(customBits ?? refs.receiverInput.value);
 
-    
-
-    let binaryPolynomial = convertToBinary(polynomial)
-    let polynomialDegree = convertToBinary(polynomial).length - 1;
-    let newMessage = message;
-    for (let i = 0; i < convertToBinary(polynomial).length - 1; i++) {
-        newMessage += '0';
+    if (!receivedBits) {
+        setFormMessage(refs.receiverMessage, "Enter a received message to check.", "error");
+        return;
     }
 
-    
-
-    // Display the newMessage and the polynomial in the remainder container
-    defaultValues.innerHTML = '<h2>Reviewing Division Process</h2><br>';
-    defaultValues.innerHTML += `M(x) * x^${polynomialDegree} = ${addGaps(newMessage)}<br>G(x) = ${addGaps(convertToBinary(polynomial))}<br> `;
-    defaultValues.style.border = '2px solid #333';
-    defaultValues.style.borderTopLeftRadius = '15px';
-    defaultValues. style.borderTopRightRadius = '15px';
-    
-    let remainder = calculateRemainder(newMessage, binaryPolynomial, 'remainderContainer');
-    remainderContainer.style.border = "2px solid #333";
-
-    transmitContainer.style.border = '2px solid #333';
-    transmitContainer.style.backgroundColor = '#333';
-    transmitContainer.style.borderBottomLeftRadius = '15px';
-    transmitContainer. style.borderBottomRightRadius = '15px';
-    transmitContainer.style.color = '#ddd';
-
-    transmitMessage = addBinaryStrings(newMessage, remainder);
-    transmitContainer.innerHTML += `T(x) = M(x) * x^${polynomialDegree} + R(x) = <br>
-    ${addGaps(newMessage)} + ${addGaps(remainder)} = <br><br>
-    <span style="color: limegreen">${addGaps(transmitMessage)}</span><br><div id = "note">(This message will be sent from the Transmitter to the Receiver.)</div>
-    `;
-
-    
-    const checkContainer = document.getElementById('checkContainer');
-    checkContainer.style.display = 'block';
-    /*checkContainer.style.border = '2px solid #333';
-    checkContainer.style.borderRadius = '15px'; */
- 
-
-});
-
-document.getElementById('check-form').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent form submission
-
-    const errorInsert = document.getElementById('errorInsert'); //Field for the check message input form
-    const errorMessage = document.getElementById('errorMessageCheck');  //Wrong input notification field
-    const { message, polynomial } = getValues();    //Get original message and polyomial
-    let binaryPolynomial = convertToBinary(polynomial)  //Convert polynomial to binary format
-    const inputMessage = document.getElementById('newmessage').value.trim().replace(/\s/g, '');;    //Get new message to be tested
-    const resultContainer = document.getElementById('resultContainer'); //Field for the check results to be viewed
-
-
-    if (!isBinary(inputMessage)) {  //Check new message for correct syntax
-        errorMessage.textContent = 'Message not in binary format.';
-        return; 
+    if (!isBinaryString(receivedBits)) {
+        setFormMessage(refs.receiverMessage, "The received message must be binary.", "error");
+        return;
     }
 
-    // If the input is in binary format clear any previous error message
-    errorMessage.textContent = '';
-    errorInsert.style.borderBottomLeftRadius = '0px';
-    errorInsert.style.borderBottomRightRadius = '0px';
+    if (receivedBits.length !== state.encoded.codeword.length) {
+        setFormMessage(
+            refs.receiverMessage,
+            `The received message must be ${state.encoded.codeword.length} bits long.`,
+            "error"
+        );
+        return;
+    }
 
-    const checkRemainder = document.getElementById('checkRemainder');   //Field for the calculations to take place
-    checkRemainder.style.border = "2px solid #333";
+    refs.receiverInput.value = receivedBits;
 
-    let newremainder = calculateRemainder(inputMessage, binaryPolynomial, 'checkRemainder');
-    
+    const result = evaluateReceivedMessage(receivedBits, state.encoded);
+    state.receiverResult = result;
 
-    
-    resultContainer.style.border = '2px solid #333';
-    resultContainer.style.backgroundColor = '#333';
-    resultContainer.style.borderBottomLeftRadius = '15px';
-    resultContainer. style.borderBottomRightRadius = '15px';
-    resultContainer.style.color = '#ddd';
+    renderReceiverSummary(result, note);
+    renderDivisionSteps(refs.receiverSteps, result.division.steps, state.encoded.generator.binary);
+    setFormMessage(refs.receiverMessage, "Receiver check complete.", "success");
+}
 
-    if(newremainder == '0'.repeat(newremainder.length)) newremainder = 0; else newremainder = 1;
-
-    if((newremainder == 0) && inputMessage == transmitMessage)
-        resultContainer.innerHTML = `<p>The remainder of the devision is 0 and the checked message was equal to the message the Transmitter sent. The Generator Polynomial was <span style="color: limegreen">effective.</span></p>`;
-    else if((newremainder == 0) && inputMessage != transmitMessage)
-        resultContainer.innerHTML = `<p>The remainder of the devision is 0 but the checked message was not equal to the message the Transmitter sent. The Generator Polynomial was not <span style="color: red">effective.</span></p>`;
-    else if((newremainder != 0) && inputMessage == transmitMessage)
-        resultContainer.innerHTML = `<p>The remainder of the devision is not 0 but the checked message was equal to the message the Transmitter sent. The Generator Polynomial was not <span style="color: red">effective.</span></p>`;
-    else if((newremainder != 0) && inputMessage != transmitMessage)
-        resultContainer.innerHTML = `<p>The remainder of the devision is not 0 and the checked message was not equal to the message the Transmitter sent. The Generator Polynomial was <span style="color: limegreen">effective.</span></p>`;
-    
-
-});
-
-document.getElementById('clearButton').addEventListener('click', function(event) {
+refs.crcForm.addEventListener("submit", (event) => {
     event.preventDefault();
 
-    document.getElementById('newmessage').value = '';
-    document.getElementById('checkRemainder').innerHTML = '';
-    document.getElementById('resultContainer').innerHTML = '';
-    document.getElementById('errorMessageCheck').textContent = '';
+    const messageBits = normalizeBinaryInput(refs.messageInput.value);
+
+    if (!messageBits) {
+        setFormMessage(refs.formMessage, "Enter an initial message.", "error");
+        return;
+    }
+
+    if (!isBinaryString(messageBits)) {
+        setFormMessage(refs.formMessage, "The initial message must be binary.", "error");
+        return;
+    }
+
+    let generator;
+
+    try {
+        generator = parseGenerator(refs.generatorInput.value);
+    } catch (error) {
+        setFormMessage(refs.formMessage, error.message, "error");
+        return;
+    }
+
+    const encoded = encodeMessage(messageBits, generator);
+    state.encoded = encoded;
+
+    renderSummary(encoded);
+    renderDivisionBand(encoded);
+    renderDivisionSteps(refs.divisionSteps, encoded.division.steps, encoded.generator.binary);
+
+    refs.divisionSection.classList.remove("is-hidden");
+    refs.receiverSection.classList.remove("is-hidden");
+    refs.receiverInput.value = encoded.codeword;
+    refs.receiverSteps.innerHTML = "";
+    refs.receiverSummary.className = "panel verdict-panel verdict-neutral";
+    refs.receiverSummary.innerHTML = `
+        <p class="verdict-kicker">Receiver verdict</p>
+        <h3>Ready to validate</h3>
+        <p>
+            The transmitted codeword has been loaded into the receiver input. You can
+            check it as-is or inject an error first.
+        </p>
+    `;
+    setFormMessage(refs.formMessage, "CRC encoding complete.", "success");
+    setFormMessage(refs.receiverMessage, "");
 });
+
+refs.crcForm.addEventListener("reset", () => {
+    window.setTimeout(() => {
+        resetWorkspace();
+    }, 0);
+});
+
+refs.receiverForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    runReceiverCheck();
+});
+
+refs.useCodewordButton.addEventListener("click", () => {
+    if (!state.encoded) {
+        setFormMessage(refs.receiverMessage, "Run the transmitter workflow first.", "error");
+        return;
+    }
+
+    runReceiverCheck(state.encoded.codeword, "The original transmitted codeword was re-used.");
+});
+
+refs.flipBitButton.addEventListener("click", () => {
+    if (!state.encoded) {
+        setFormMessage(refs.receiverMessage, "Run the transmitter workflow first.", "error");
+        return;
+    }
+
+    const bits = state.encoded.codeword.split("");
+    const randomIndex = Math.floor(Math.random() * bits.length);
+    bits[randomIndex] = bits[randomIndex] === "1" ? "0" : "1";
+
+    runReceiverCheck(
+        bits.join(""),
+        `Introduced a 1-bit error at position ${randomIndex + 1}.`
+    );
+});
+
+refs.clearReceiverButton.addEventListener("click", () => {
+    resetReceiverView();
+});
+
+refs.presetButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+        refs.messageInput.value = button.dataset.message ?? "";
+        refs.generatorInput.value = button.dataset.generator ?? "";
+        setFormMessage(refs.formMessage, "Example preset loaded.", "success");
+    });
+});
+
+resetWorkspace();

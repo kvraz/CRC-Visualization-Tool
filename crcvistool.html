@@ -3,74 +3,225 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>CRC Visualization Tool</title> 
+        <meta
+            name="description"
+            content="Interactive CRC visualization tool for encoding, long-division walkthroughs, and receiver-side error checking."
+        >
+        <title>CRC Visualization Tool</title>
         <link rel="stylesheet" href="styles.css">
+        <script src="crcvistool.js" defer></script>
     </head>
     <body>
-        <h1>CRC VISUALIZATION TOOL</h1>
-        <h2>This is a tool to visualize how Cyclic Redundancy Check algorithm for error detection works</h2>
-
-        <!-- Container for inserting and displaying values -->
-        <div class="container">
-            <!-- Form to get the message and polynomial -->
-            <div class="input-box">
-                <form id="form" action="#" method="post">
-                    <div class="input-field">
-                        <label for="message">Initial Message:</label>
-                        <input type="text" id="message" name="message" placeholder="Must be in binary format" required>
-                    </div>
-                    <div class="input-field">
-                        <label for="polynomial">Generator Polynomial:</label>
-                        <input type="text" id="polynomial" name="polynomial" placeholder="Must be in format: x^k + x^(k-1) + ... + x^1 + 1" required>
-                    </div>
-                    <input type="submit" value="Calculate" class="button">
-                    <!--<input type="reset" value="Clear" class="button">
-                    <div id="errorMessage" style="color: red;"></div> -->
-                    <div id="clear-container">
-                        <input type="reset" value="Clear" class="button">
-                        <p id="errorMessage" style="color: red; display: inline-block; margin-left: 10px;"></p>
-                    </div>
-                </form>
-            </div>
-            <!-- Box for displaying values -->
-            <div class="values-box">
-                <p id="messageValue">M(x) = </p>
-                <p id="polynomialValue">G(x) = </p>
-                <p id="newValue">M(x) * x^k = </p>
-                <div id = "note">(Adding as many 0s at the end of the message as the polynomial degree)</div><br>
-                <input type="submit" value="Calculate Remainder" class="button">
-                
-            </div>
-        </div>
-        <div class="operations-container" id="operationsContainer">
-            <div class="message-container" id="messageContainer">
-                <div id="defaultValues" class="container default-values"></div>
-                <div id="remainderContainer" class="container remainder"></div>
-                <div class="transmit-container" id="transmitContainer"></div>
-            </div>
-            <div class="check-container" id="checkContainer">
-                <div id="errorInsert" class="error-insert">
-                    <h2>Check Message for Errors</h2>
-                    <form id="check-form" action="#" method="post">
-                        <div class="input-field">
-                            <label for="newmessage">New Message:</label>
-                            <input type="text" id="newmessage" name="message" placeholder="Must be in binary format" required>
-                        </div>
-                        <input type="submit" value="Check" class="button">
-                        <div id="clear-container">
-                            <!-- Wrap the "Clear" button inside a <button> tag -->
-                            <button id="clearButton" class="button">Clear</button>
-                            <p id="errorMessageCheck" style="color: red; display: inline-block; margin-left: 10px;"></p>
-                        </div>
-                    </form>
+        <main class="page-shell">
+            <header class="hero">
+                <div class="hero-copy">
+                    <p class="eyebrow">Interactive CRC playground</p>
+                    <h1>CRC Visualization Tool</h1>
+                    <p class="hero-text">
+                        Explore how a generator polynomial protects a binary message,
+                        watch each XOR alignment in the CRC division process, and test
+                        whether the receiver can detect altered bits.
+                    </p>
                 </div>
-                <div id="checkRemainder" class="container remainder"></div>
-                <div class="transmit-container" id="resultContainer"></div>
-            </div>
-            
-        </div>
-        
+                <div class="hero-meta">
+                    <div class="meta-block">
+                        <span>Accepts</span>
+                        <strong>Binary messages and polynomial or binary generators</strong>
+                    </div>
+                    <div class="meta-block">
+                        <span>Shows</span>
+                        <strong>Step-by-step CRC long division in GF(2)</strong>
+                    </div>
+                    <div class="meta-block">
+                        <span>Tests</span>
+                        <strong>Receiver-side validation and undetected error cases</strong>
+                    </div>
+                </div>
+            </header>
 
-        <script src="crcvistool.js"></script>
+            <section class="workspace">
+                <section class="panel input-panel">
+                    <div class="section-heading">
+                        <p class="kicker">Transmitter</p>
+                        <h2>Build the protected frame</h2>
+                        <p>
+                            Enter the source message and generator, then the tool will
+                            compute the padded message, CRC remainder, and transmitted
+                            codeword in one pass.
+                        </p>
+                    </div>
+
+                    <form id="crcForm" class="stack" novalidate>
+                        <label class="field-group" for="messageInput">
+                            <span class="field-label">Initial message</span>
+                            <input
+                                id="messageInput"
+                                name="message"
+                                type="text"
+                                autocomplete="off"
+                                placeholder="Example: 1101011011"
+                            >
+                            <span class="field-hint">Binary digits only. Spaces are allowed.</span>
+                        </label>
+
+                        <label class="field-group" for="generatorInput">
+                            <span class="field-label">Generator</span>
+                            <input
+                                id="generatorInput"
+                                name="generator"
+                                type="text"
+                                autocomplete="off"
+                                placeholder="Example: x^4 + x + 1 or 10011"
+                            >
+                            <span class="field-hint">
+                                Use polynomial notation such as
+                                <code>x^4 + x + 1</code> or direct generator bits such
+                                as <code>10011</code>.
+                            </span>
+                        </label>
+
+                        <div class="preset-row" aria-label="Example presets">
+                            <button
+                                type="button"
+                                class="chip-button preset-button"
+                                data-message="1101011011"
+                                data-generator="x^4 + x + 1"
+                            >
+                                Classic CRC-4
+                            </button>
+                            <button
+                                type="button"
+                                class="chip-button preset-button"
+                                data-message="1011001"
+                                data-generator="x^3 + x + 1"
+                            >
+                                Short walkthrough
+                            </button>
+                            <button
+                                type="button"
+                                class="chip-button preset-button"
+                                data-message="1110010110"
+                                data-generator="1011"
+                            >
+                                Binary generator
+                            </button>
+                        </div>
+
+                        <div class="action-row">
+                            <button type="submit" class="primary-button">Visualize CRC</button>
+                            <button type="reset" class="secondary-button">Reset workspace</button>
+                        </div>
+
+                        <p id="formMessage" class="form-message" aria-live="polite"></p>
+                    </form>
+                </section>
+
+                <aside class="panel summary-panel">
+                    <div class="section-heading">
+                        <p class="kicker">Summary</p>
+                        <h2>Encoding snapshot</h2>
+                        <p>
+                            The calculated message state appears here after every valid
+                            CRC run.
+                        </p>
+                    </div>
+                    <div id="summaryContainer" class="empty-state">
+                        Run a calculation to see the generator bits, padded message,
+                        remainder, and final transmitted codeword.
+                    </div>
+                </aside>
+            </section>
+
+            <section id="divisionSection" class="flow-section is-hidden">
+                <div class="section-heading section-heading-wide">
+                    <div>
+                        <p class="kicker">Long division</p>
+                        <h2>Step through the CRC operation</h2>
+                        <p>
+                            Each step aligns the generator with the current working
+                            register. When the leading bit is <code>1</code>, XOR is
+                            applied. When it is <code>0</code>, the generator simply
+                            shifts to the next position.
+                        </p>
+                    </div>
+                    <div class="legend">
+                        <span class="legend-item">
+                            <i class="legend-dot legend-active"></i>
+                            Active window
+                        </span>
+                        <span class="legend-item">
+                            <i class="legend-dot legend-generator"></i>
+                            Generator alignment
+                        </span>
+                        <span class="legend-item">
+                            <i class="legend-dot legend-muted"></i>
+                            Shift-only step
+                        </span>
+                    </div>
+                </div>
+
+                <div id="divisionBand" class="transmission-band"></div>
+                <div id="divisionSteps" class="steps-list"></div>
+            </section>
+
+            <section id="receiverSection" class="flow-section is-hidden">
+                <div class="section-heading section-heading-wide">
+                    <div>
+                        <p class="kicker">Receiver</p>
+                        <h2>Check a received frame</h2>
+                        <p>
+                            Reuse the transmitted codeword, inject a one-bit error, or
+                            paste your own received frame to see whether the remainder
+                            reveals corruption.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="receiver-layout">
+                    <form id="receiverForm" class="panel receiver-form stack" novalidate>
+                        <label class="field-group" for="receiverInput">
+                            <span class="field-label">Received message</span>
+                            <input
+                                id="receiverInput"
+                                name="received"
+                                type="text"
+                                autocomplete="off"
+                                placeholder="A transmitted frame will appear here after encoding"
+                            >
+                            <span class="field-hint">
+                                The receiver expects the same length as the transmitted
+                                codeword.
+                            </span>
+                        </label>
+
+                        <div class="action-row receiver-actions">
+                            <button type="submit" class="primary-button">Check message</button>
+                            <button type="button" id="useCodewordButton" class="secondary-button">
+                                Use transmitted codeword
+                            </button>
+                            <button type="button" id="flipBitButton" class="ghost-button">
+                                Introduce 1-bit error
+                            </button>
+                            <button type="button" id="clearReceiverButton" class="ghost-button">
+                                Clear check
+                            </button>
+                        </div>
+
+                        <p id="receiverMessage" class="form-message" aria-live="polite"></p>
+                    </form>
+
+                    <div id="receiverSummary" class="panel verdict-panel verdict-neutral">
+                        <p class="verdict-kicker">Receiver verdict</p>
+                        <h3>Waiting for a candidate message</h3>
+                        <p>
+                            Once you run a receiver check, the remainder analysis and
+                            detection result will appear here.
+                        </p>
+                    </div>
+                </div>
+
+                <div id="receiverSteps" class="steps-list compact-steps"></div>
+            </section>
+        </main>
     </body>
 </html>
